@@ -1,0 +1,5 @@
+.build/
+.swiftpm/
+fanguolai
+*.o
+.DS_Store
