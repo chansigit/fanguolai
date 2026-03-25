@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <a href="README.md">English</a> | <a href="README_zh.md">中文</a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/platform-macOS-blue" alt="macOS">
   <img src="https://img.shields.io/badge/language-Swift-orange" alt="Swift">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
@@ -22,8 +26,17 @@ It uses macOS `CGEventTap` to intercept scroll events and selectively reverses o
 
 ## Install
 
+**Download binary** from [Releases](https://github.com/chansigit/fanguolai/releases):
+
 ```bash
-git clone https://github.com/chensijie/fanguolai.git
+chmod +x fanguolai
+sudo mv fanguolai /usr/local/bin/
+```
+
+**Or build from source:**
+
+```bash
+git clone https://github.com/chansigit/fanguolai.git
 cd fanguolai
 make build
 sudo make install   # installs to /usr/local/bin
