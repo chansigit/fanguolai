@@ -113,6 +113,21 @@ Stored at `~/.config/fanguolai/config.json`:
 }
 ```
 
+## Changelog
+
+### v1.0.1 (2026-03-30)
+- **Fix**: Scroll reversal now works correctly with a single instance
+- **New**: `--debug` flag for `start` command to inspect scroll events
+
+### v1.0.0 (2026-03-30)
+- Initial release
+- Reverse mouse scroll wheel without affecting trackpad
+- Independent vertical / horizontal direction control
+- Background daemon mode and LaunchAgent autostart
+- Bilingual UI (English / 中文)
+
+Full changelog: [CHANGELOG.md](CHANGELOG.md)
+
 ## License
 
 MIT
