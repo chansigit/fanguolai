@@ -13,6 +13,7 @@ let command = args.first ?? "help"
 switch command {
 case "start":
     let isDaemon = args.contains("--daemon")
+    let isDebug = args.contains("--debug")
     if isDaemon {
         do {
             try DaemonManager.startDaemon()
@@ -22,7 +23,7 @@ case "start":
         }
     } else {
         let config = ConfigManager.load()
-        let tap = ScrollEventTap(config: config)
+        let tap = ScrollEventTap(config: config, debug: isDebug)
         if !tap.start() {
             exit(1)
         }
