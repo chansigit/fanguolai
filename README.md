@@ -1,109 +1,97 @@
 <p align="center">
-  <img src="logo.svg" width="120" height="120" alt="fanguolai logo">
+  <img src="logo.svg" width="100" height="100" alt="fanguolai">
 </p>
 
 <h1 align="center">fanguolai</h1>
 
 <p align="center">
-  <strong>Reverse mouse scroll wheel direction on macOS — without affecting your trackpad.</strong>
+  Decouple mouse and trackpad scroll directions on macOS.
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README_zh.md">中文</a>
+  <a href="https://github.com/chansigit/fanguolai/releases"><img src="https://img.shields.io/github/v/release/chansigit/fanguolai?color=blue" alt="release"></a>
+  <img src="https://img.shields.io/badge/macOS-11%2B-black" alt="macOS 11+">
+  <img src="https://img.shields.io/badge/Swift-5.4%2B-F05138" alt="Swift">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/chansigit/fanguolai" alt="MIT"></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-macOS-blue" alt="macOS">
-  <img src="https://img.shields.io/badge/language-Swift-orange" alt="Swift">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
+  <a href="README.md">English</a> | <a href="README_zh.md">中文</a> | <a href="README_ko.md">한국어</a> | <a href="README_ja.md">日本語</a> | <a href="README_de.md">Deutsch</a> | <a href="README_ru.md">Русский</a> | <a href="README_fr.md">Français</a> | <a href="README_es.md">Español</a> | <a href="README_vi.md">Tiếng Việt</a> | <a href="README_hi.md">हिन्दी</a> | <a href="README_yue.md">粵語</a> | <a href="README_sv.md">Svenska</a> | <a href="README_no.md">Norsk</a> | <a href="README_fi.md">Suomi</a> | <a href="README_ca.md">Català</a>
 </p>
 
 ---
 
-macOS ties "Natural Scrolling" to both trackpad and mouse. If you want your trackpad to scroll naturally but your mouse wheel to scroll traditionally (or vice versa), **fanguolai** fixes that.
+## The Problem
 
-It uses macOS `CGEventTap` to intercept scroll events and selectively reverses only mouse wheel events, leaving trackpad gestures untouched.
+macOS has one global "Natural Scrolling" toggle. Turn it on and your trackpad feels right, but your mouse wheel goes the wrong way. Turn it off and it's the opposite. There's no built-in way to set them independently.
 
-## Install
+**fanguolai** (翻过来, "flip it") fixes this. It sits between your mouse and macOS, reversing only mouse scroll events while leaving trackpad gestures alone.
 
-**Download binary** from [Releases](https://github.com/chansigit/fanguolai/releases):
+- ~150 KB single binary, no dependencies
+- Per-axis control (vertical / horizontal)
+- Daemon mode + LaunchAgent for autostart
+- Uses `CGEventTap` under the hood
 
-```bash
-chmod +x fanguolai
-sudo mv fanguolai /usr/local/bin/
-```
-
-**Or build from source:**
+## Quick Start
 
 ```bash
+# Download from GitHub Releases, or build from source:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai
-make build
-sudo make install   # installs to /usr/local/bin
+cd fanguolai && make build
+sudo make install
+
+# Run it
+fanguolai start
 ```
 
-> Requires Xcode Command Line Tools (`xcode-select --install`).
+> **First run:** macOS will prompt for Accessibility permission.
+> Grant it in **System Settings → Privacy & Security → Accessibility**.
 
 ## Usage
 
 ```bash
-# Start (foreground)
-fanguolai start
-
-# Start as background daemon
-fanguolai start --daemon
-
-# Stop daemon
-fanguolai stop
-
-# Check status
-fanguolai status
+fanguolai start              # foreground
+fanguolai start --daemon     # background
+fanguolai stop               # stop daemon
+fanguolai status             # show status & config
 ```
 
 ### Configuration
 
 ```bash
-# View current config
-fanguolai config
-
-# Reverse vertical scroll (default)
-fanguolai config --vertical reverse
-
-# Also reverse horizontal scroll
-fanguolai config --horizontal reverse
-
-# Switch UI language (en / zh)
-fanguolai config --lang zh
+fanguolai config                        # show current settings
+fanguolai config --vertical reverse     # reverse vertical (default)
+fanguolai config --horizontal reverse   # reverse horizontal too
+fanguolai config --lang zh              # switch CLI language
 ```
 
-### Autostart
+### Autostart on Login
 
 ```bash
-# Install LaunchAgent (start on login)
-fanguolai install
-
-# Remove LaunchAgent
-fanguolai uninstall
+fanguolai install     # add LaunchAgent
+fanguolai uninstall   # remove LaunchAgent
 ```
 
-## Permissions
+### Troubleshooting
 
-On first run, macOS will ask for **Accessibility** permission:
-
-**System Settings → Privacy & Security → Accessibility**
-
-Add your terminal app (or the `fanguolai` binary) to the allowed list.
+```bash
+fanguolai start --debug   # print raw scroll events for diagnosis
+```
 
 ## How It Works
 
-- Hooks into macOS HID event stream via `CGEventTap`
-- Distinguishes mouse (discrete scroll, `isContinuous == 0`) from trackpad (continuous scroll, `isContinuous != 0`)
-- Only reverses scroll delta for mouse wheel events
-- Trackpad behavior stays completely unchanged
+macOS scroll events carry a flag `scrollWheelEventIsContinuous`:
+
+| Value | Source | fanguolai action |
+|-------|--------|-----------------|
+| `0` | Mouse wheel (discrete) | Reverse delta |
+| `!= 0` | Trackpad (continuous) | Pass through |
+
+The reversal is done by intercepting events via `CGEventTap` at the session level, copying the event with negated scroll deltas, and returning the modified copy. Trackpad events are never touched.
 
 ## Config File
 
-Stored at `~/.config/fanguolai/config.json`:
+`~/.config/fanguolai/config.json`
 
 ```json
 {
@@ -115,19 +103,11 @@ Stored at `~/.config/fanguolai/config.json`:
 
 ## Changelog
 
-### v1.0.1 (2026-03-30)
-- **Fix**: Scroll reversal now works correctly with a single instance
-- **New**: `--debug` flag for `start` command to inspect scroll events
+**v1.0.1** — Fixed scroll reversal requiring double instances. Added `--debug` flag.
+**v1.0.0** — Initial release.
 
-### v1.0.0 (2026-03-30)
-- Initial release
-- Reverse mouse scroll wheel without affecting trackpad
-- Independent vertical / horizontal direction control
-- Background daemon mode and LaunchAgent autostart
-- Bilingual UI (English / 中文)
-
-Full changelog: [CHANGELOG.md](CHANGELOG.md)
+See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ## License
 
-MIT
+[MIT](LICENSE)

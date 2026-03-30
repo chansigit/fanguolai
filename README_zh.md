@@ -1,109 +1,96 @@
 <p align="center">
-  <img src="logo.svg" width="120" height="120" alt="fanguolai logo">
+  <img src="logo.svg" width="100" height="100" alt="fanguolai">
 </p>
 
 <h1 align="center">fanguolai（翻过来）</h1>
 
 <p align="center">
-  <strong>在 macOS 上反转鼠标滚轮方向，不影响触控板。</strong>
+  让鼠标和触控板的滚动方向各走各的。
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README_zh.md">中文</a>
+  <a href="https://github.com/chansigit/fanguolai/releases"><img src="https://img.shields.io/github/v/release/chansigit/fanguolai?color=blue" alt="release"></a>
+  <img src="https://img.shields.io/badge/macOS-11%2B-black" alt="macOS 11+">
+  <img src="https://img.shields.io/badge/Swift-5.4%2B-F05138" alt="Swift">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/chansigit/fanguolai" alt="MIT"></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/平台-macOS-blue" alt="macOS">
-  <img src="https://img.shields.io/badge/语言-Swift-orange" alt="Swift">
-  <img src="https://img.shields.io/badge/协议-MIT-green" alt="MIT">
+  <a href="README.md">English</a> | <a href="README_zh.md">中文</a> | <a href="README_ko.md">한국어</a> | <a href="README_ja.md">日本語</a> | <a href="README_de.md">Deutsch</a> | <a href="README_ru.md">Русский</a> | <a href="README_fr.md">Français</a> | <a href="README_es.md">Español</a> | <a href="README_vi.md">Tiếng Việt</a> | <a href="README_hi.md">हिन्दी</a> | <a href="README_yue.md">粵語</a> | <a href="README_sv.md">Svenska</a> | <a href="README_no.md">Norsk</a> | <a href="README_fi.md">Suomi</a> | <a href="README_ca.md">Català</a>
 </p>
 
 ---
 
-macOS 的「自然滚动」设置会同时影响触控板和鼠标。如果你希望触控板保持自然滚动，但鼠标滚轮使用传统方向（或反过来），**fanguolai** 帮你搞定。
+## 痛点
 
-它通过 macOS `CGEventTap` 拦截滚动事件，只反转鼠标滚轮事件，触控板完全不受影响。
+macOS 只有一个「自然滚动」开关，开了触控板舒服但鼠标滚轮就反了，关了滚轮正常触控板又别扭。系统不让你分开设置。
 
-## 安装
+**fanguolai** 解决这个问题 — 拦截鼠标滚轮事件并反转方向，触控板完全不受影响。
 
-**下载二进制文件**，从 [Releases](https://github.com/chansigit/fanguolai/releases) 页面：
+- 单文件 ~150 KB，无依赖
+- 垂直/水平方向独立控制
+- 支持后台运行 + 开机自启
+- 底层基于 `CGEventTap`
 
-```bash
-chmod +x fanguolai
-sudo mv fanguolai /usr/local/bin/
-```
-
-**或从源码编译：**
+## 快速开始
 
 ```bash
+# 从 GitHub Releases 下载，或从源码编译：
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai
-make build
-sudo make install   # 安装到 /usr/local/bin
+cd fanguolai && make build
+sudo make install
+
+# 启动
+fanguolai start
 ```
 
-> 需要 Xcode Command Line Tools（`xcode-select --install`）。
+> **首次运行**需要授予辅助功能权限：**系统设置 → 隐私与安全性 → 辅助功能**
 
-## 使用
+## 用法
 
 ```bash
-# 前台启动
-fanguolai start
-
-# 后台 daemon 模式
-fanguolai start --daemon
-
-# 停止 daemon
-fanguolai stop
-
-# 查看状态
-fanguolai status
+fanguolai start              # 前台运行
+fanguolai start --daemon     # 后台运行
+fanguolai stop               # 停止
+fanguolai status             # 查看状态
 ```
 
 ### 配置
 
 ```bash
-# 查看当前配置
-fanguolai config
-
-# 反转垂直滚动（默认）
-fanguolai config --vertical reverse
-
-# 同时反转水平滚动
-fanguolai config --horizontal reverse
-
-# 切换界面语言（en / zh）
-fanguolai config --lang zh
+fanguolai config                        # 查看当前配置
+fanguolai config --vertical reverse     # 反转垂直方向（默认）
+fanguolai config --horizontal reverse   # 反转水平方向
+fanguolai config --lang en              # 切换界面语言
 ```
 
 ### 开机自启
 
 ```bash
-# 安装 LaunchAgent（登录时自动启动）
-fanguolai install
-
-# 卸载 LaunchAgent
-fanguolai uninstall
+fanguolai install     # 安装 LaunchAgent
+fanguolai uninstall   # 卸载 LaunchAgent
 ```
 
-## 权限
+### 排查问题
 
-首次运行时，macOS 会要求 **辅助功能** 权限：
+```bash
+fanguolai start --debug   # 打印原始滚动事件，方便诊断
+```
 
-**系统设置 → 隐私与安全性 → 辅助功能**
+## 原理
 
-将你的终端应用（或 `fanguolai` 二进制文件）添加到允许列表。
+macOS 滚动事件有一个 `scrollWheelEventIsContinuous` 标志位：
 
-## 工作原理
+| 值 | 来源 | fanguolai 处理 |
+|----|------|---------------|
+| `0` | 鼠标滚轮（离散） | 反转 delta |
+| `!= 0` | 触控板（连续） | 直接放行 |
 
-- 通过 `CGEventTap` 接入 macOS HID 事件流
-- 区分鼠标（离散滚动，`isContinuous == 0`）和触控板（连续滚动，`isContinuous != 0`）
-- 仅反转鼠标滚轮事件的滚动方向
-- 触控板行为完全不变
+通过 `CGEventTap` 在 session 层拦截事件，复制后取反滚动值，返回修改后的副本。触控板事件从不修改。
 
 ## 配置文件
 
-存储在 `~/.config/fanguolai/config.json`：
+`~/.config/fanguolai/config.json`
 
 ```json
 {
@@ -115,19 +102,11 @@ fanguolai uninstall
 
 ## 更新日志
 
-### v1.0.1 (2026-03-30)
-- **修复**：单实例即可正确反转滚轮方向
-- **新增**：`start` 命令支持 `--debug` 参数，用于查看滚动事件排查问题
+**v1.0.1** — 修复需要启动两个实例才能生效的问题，新增 `--debug` 参数。
+**v1.0.0** — 首次发布。
 
-### v1.0.0 (2026-03-30)
-- 首次发布
-- 反转鼠标滚轮方向，不影响触控板
-- 独立控制垂直/水平方向
-- 后台 daemon 模式和开机自启
-- 双语界面（English / 中文）
-
-完整日志：[CHANGELOG.md](CHANGELOG.md)
+详见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 许可证
 
-MIT
+[MIT](LICENSE)
