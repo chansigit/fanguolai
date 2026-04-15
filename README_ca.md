@@ -37,7 +37,8 @@ macOS té un únic commutador global de "Desplaçament natural". Si l'actives, e
 ```bash
 # Descarrega des de GitHub Releases, o compila des del codi font:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Executa'l

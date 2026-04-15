@@ -37,7 +37,8 @@ macOS has one global "Natural Scrolling" toggle. Turn it on and your trackpad fe
 ```bash
 # Download from GitHub Releases, or build from source:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Run it
@@ -46,6 +47,8 @@ fanguolai start
 
 > **First run:** macOS will prompt for Accessibility permission.
 > Grant it in **System Settings → Privacy & Security → Accessibility**.
+
+> If you use `fanguolai install` for autostart, grant permission to `~/Applications/Fanguolai.app`, not `/usr/local/bin/fanguolai`.
 
 ## Usage
 
@@ -71,6 +74,8 @@ fanguolai config --lang zh              # switch CLI language
 fanguolai install     # add LaunchAgent
 fanguolai uninstall   # remove LaunchAgent
 ```
+
+`install` also creates `~/Applications/Fanguolai.app`. The LaunchAgent runs the executable inside that app bundle, so add the app to Accessibility and enable it there.
 
 ### Troubleshooting
 

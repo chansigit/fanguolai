@@ -37,7 +37,8 @@ macOS tiene un único interruptor global de "Desplazamiento Natural". Actívalo 
 ```bash
 # Descarga desde GitHub Releases, o compila desde el código fuente:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Ejecútalo

@@ -37,7 +37,8 @@ macOS chỉ có một nút gạt "Cuộn Tự Nhiên" duy nhất. Bật lên th�
 ```bash
 # Tải xuống từ GitHub Releases, hoặc tự biên dịch:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Chạy thử

@@ -37,7 +37,8 @@ macOS hat einen einzigen globalen Schalter für „Natürliches Scrollen". Aktiv
 ```bash
 # Von GitHub Releases herunterladen oder aus dem Quellcode erstellen:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Starten

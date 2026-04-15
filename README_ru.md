@@ -37,7 +37,8 @@
 ```bash
 # Скачайте с GitHub Releases или соберите из исходников:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Запустите

@@ -37,7 +37,8 @@ macOS 只有一个「自然滚动」开关，开了触控板舒服但鼠标滚�
 ```bash
 # 从 GitHub Releases 下载，或从源码编译：
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # 启动
@@ -45,6 +46,8 @@ fanguolai start
 ```
 
 > **首次运行**需要授予辅助功能权限：**系统设置 → 隐私与安全性 → 辅助功能**
+
+> 如果你使用 `fanguolai install` 开机自启，授权对象应为 `~/Applications/Fanguolai.app`，不是 `/usr/local/bin/fanguolai`。
 
 ## 用法
 
@@ -70,6 +73,8 @@ fanguolai config --lang en              # 切换界面语言
 fanguolai install     # 安装 LaunchAgent
 fanguolai uninstall   # 卸载 LaunchAgent
 ```
+
+`install` 会同时创建 `~/Applications/Fanguolai.app`，LaunchAgent 会启动这个 app 包内的可执行文件。请把这个 App 加到“辅助功能”里并勾选授权。
 
 ### 排查问题
 
