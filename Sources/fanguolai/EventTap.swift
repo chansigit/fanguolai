@@ -13,6 +13,12 @@ class ScrollEventTap {
     }
 
     func start() -> Bool {
+        let permissionTargetPath = AccessibilityPermission.permissionTargetPath()
+        guard AccessibilityPermission.isTrusted(prompt: AccessibilityPermission.shouldPromptUser()) else {
+            print(L10n.eventTapPermissionRequired(permissionTargetPath))
+            return false
+        }
+
         let eventMask: CGEventMask = 1 << CGEventType.scrollWheel.rawValue
 
         guard let tap = CGEvent.tapCreate(
@@ -23,7 +29,7 @@ class ScrollEventTap {
             callback: scrollCallback,
             userInfo: Unmanaged.passUnretained(self).toOpaque()
         ) else {
-            print(L10n.eventTapError)
+            print(L10n.eventTapError(permissionTargetPath))
             return false
         }
 
@@ -91,16 +97,23 @@ private func scrollCallback(
     }
 
     let isContinuous = event.getIntegerValueField(.scrollWheelEventIsContinuous)
+    let scrollPhase = event.getIntegerValueField(.scrollWheelEventScrollPhase)
+    let momentumPhase = event.getIntegerValueField(.scrollWheelEventMomentumPhase)
+    let sourcePID = event.getIntegerValueField(.eventSourceUnixProcessID)
     let delta1 = event.getIntegerValueField(.scrollWheelEventDeltaAxis1)
     let pointDelta1 = event.getIntegerValueField(.scrollWheelEventPointDeltaAxis1)
     let fixedDelta1 = event.getDoubleValueField(.scrollWheelEventFixedPtDeltaAxis1)
 
+    // Some vendor drivers (for example Logitech Options+) synthesize smooth wheel
+    // events as "continuous" scrolls from a userspace process. They are still mouse
+    // wheel input and should be reversed, unlike real trackpad gestures.
+    let isSynthesizedContinuousMouse = isContinuous != 0 && sourcePID > 0 && scrollPhase == 0 && momentumPhase == 0
+
     if tap.debug {
-        let source = event.getIntegerValueField(.eventSourceUnixProcessID)
-        print("[debug] isContinuous=\(isContinuous) delta1=\(delta1) pointDelta1=\(pointDelta1) fixedDelta1=\(fixedDelta1) srcPID=\(source)")
+        print("[debug] isContinuous=\(isContinuous) phase=\(scrollPhase) momentum=\(momentumPhase) synthesizedMouse=\(isSynthesizedContinuousMouse ? 1 : 0) delta1=\(delta1) pointDelta1=\(pointDelta1) fixedDelta1=\(fixedDelta1) srcPID=\(sourcePID)")
     }
 
-    if isContinuous != 0 {
+    if isContinuous != 0 && !isSynthesizedContinuousMouse {
         return Unmanaged.passUnretained(event)
     }
 

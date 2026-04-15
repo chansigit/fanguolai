@@ -37,7 +37,8 @@ macOS 得一個「自然滾動」掣，開咗觸控板舒服但滑鼠滾輪就�
 ```bash
 # 從 GitHub Releases 下載，或者從源碼編譯：
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # 啟動

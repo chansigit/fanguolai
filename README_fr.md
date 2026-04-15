@@ -37,7 +37,8 @@ macOS ne dispose que d'un seul bouton global « Défilement naturel ». Activez-
 ```bash
 # Téléchargez depuis GitHub Releases, ou compilez depuis les sources :
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Lancez-le

@@ -5,6 +5,25 @@ struct DaemonManager {
         let home = FileManager.default.homeDirectoryForCurrentUser
         return home.appendingPathComponent("Library/LaunchAgents")
     }()
+    static let applicationsDir: URL = {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        return home.appendingPathComponent("Applications")
+    }()
+    static let appBundleURL: URL = {
+        applicationsDir.appendingPathComponent("Fanguolai.app")
+    }()
+    static let appContentsURL: URL = {
+        appBundleURL.appendingPathComponent("Contents")
+    }()
+    static let appMacOSURL: URL = {
+        appContentsURL.appendingPathComponent("MacOS")
+    }()
+    static let appExecutableURL: URL = {
+        appMacOSURL.appendingPathComponent("fanguolai")
+    }()
+    static let appPlistURL: URL = {
+        appContentsURL.appendingPathComponent("Info.plist")
+    }()
 
     static let plistName = "com.fanguolai.plist"
 
@@ -47,7 +66,9 @@ struct DaemonManager {
     static func status() {
         let config = ConfigManager.load()
 
-        if let pid = loadPID() {
+        if let pid = launchAgentPID() {
+            print(L10n.statusRunning(pid))
+        } else if let pid = loadPID() {
             if kill(pid, 0) == 0 {
                 print(L10n.statusRunning(pid))
             } else {
@@ -63,12 +84,14 @@ struct DaemonManager {
         print(L10n.horizontalLabel(config.horizontal.rawValue))
         print(L10n.languageLabel(config.lang.rawValue))
         print(L10n.autoStartLabel(FileManager.default.fileExists(atPath: plistURL.path)))
+        print(L10n.appBundleLabel(FileManager.default.fileExists(atPath: appBundleURL.path), appBundleURL.path))
     }
 
     // MARK: - LaunchAgent install/uninstall
 
     static func install() throws {
         let executablePath = try resolveExecutable()
+        let bundledExecutablePath = try installAppBundle(from: executablePath)
 
         let plistContent = """
         <?xml version="1.0" encoding="UTF-8"?>
@@ -79,7 +102,7 @@ struct DaemonManager {
             <string>com.fanguolai</string>
             <key>ProgramArguments</key>
             <array>
-                <string>\(executablePath)</string>
+                <string>\(bundledExecutablePath)</string>
                 <string>start</string>
             </array>
             <key>RunAtLoad</key>
@@ -95,13 +118,16 @@ struct DaemonManager {
         """
 
         try FileManager.default.createDirectory(at: launchAgentsDir, withIntermediateDirectories: true)
+        _ = shell("launchctl unload \(shellQuote(plistURL.path))")
         try plistContent.write(to: plistURL, atomically: true, encoding: .utf8)
 
-        let result = shell("launchctl load \(plistURL.path)")
+        let result = shell("launchctl load \(shellQuote(plistURL.path))")
         if result.status == 0 {
             print(L10n.launchAgentInstalled)
+            print(L10n.appBundleInstalled(appBundleURL.path))
             print(L10n.installPlist(plistURL.path))
             print(L10n.installLog("/tmp/fanguolai.log"))
+            print(L10n.installAccessibilityHint(appBundleURL.path))
         } else {
             print(L10n.installFailed(result.output))
         }
@@ -113,7 +139,7 @@ struct DaemonManager {
             return
         }
 
-        let result = shell("launchctl unload \(plistURL.path)")
+        let result = shell("launchctl unload \(shellQuote(plistURL.path))")
         if result.status != 0 {
             print(L10n.unloadFailed(result.output))
         }
@@ -139,6 +165,48 @@ struct DaemonManager {
         return resolvedPath
     }
 
+    private static func installAppBundle(from executablePath: String) throws -> String {
+        let fileManager = FileManager.default
+        try fileManager.createDirectory(at: appMacOSURL, withIntermediateDirectories: true)
+
+        let plistContent = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleDevelopmentRegion</key>
+            <string>en</string>
+            <key>CFBundleExecutable</key>
+            <string>fanguolai</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.fanguolai.app</string>
+            <key>CFBundleInfoDictionaryVersion</key>
+            <string>6.0</string>
+            <key>CFBundleName</key>
+            <string>Fanguolai</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0.1</string>
+            <key>CFBundleVersion</key>
+            <string>1</string>
+            <key>LSBackgroundOnly</key>
+            <true/>
+        </dict>
+        </plist>
+        """
+
+        try plistContent.write(to: appPlistURL, atomically: true, encoding: .utf8)
+
+        if fileManager.fileExists(atPath: appExecutableURL.path) {
+            try fileManager.removeItem(at: appExecutableURL)
+        }
+        try fileManager.copyItem(at: URL(fileURLWithPath: executablePath), to: appExecutableURL)
+        try fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: appExecutableURL.path)
+
+        return appExecutableURL.path
+    }
+
     private static func savePID(_ pid: Int32) throws {
         try ConfigManager.ensureConfigDir()
         try "\(pid)".write(to: ConfigManager.pidFile, atomically: true, encoding: .utf8)
@@ -156,6 +224,27 @@ struct DaemonManager {
         try? FileManager.default.removeItem(at: ConfigManager.pidFile)
     }
 
+    private static func launchAgentPID() -> Int32? {
+        let result = shell("launchctl list com.fanguolai")
+        guard result.status == 0 else {
+            return nil
+        }
+
+        for line in result.output.split(separator: "\n") {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.hasPrefix("\"PID\"") || trimmed.hasPrefix("PID") else {
+                continue
+            }
+
+            let digits = trimmed.filter(\.isNumber)
+            if let pid = Int32(digits), pid > 0 {
+                return pid
+            }
+        }
+
+        return nil
+    }
+
     private static func shell(_ command: String) -> (status: Int32, output: String) {
         let process = Process()
         let pipe = Pipe()
@@ -168,5 +257,9 @@ struct DaemonManager {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8) ?? ""
         return (process.terminationStatus, output)
+    }
+
+    private static func shellQuote(_ value: String) -> String {
+        "'\(value.replacingOccurrences(of: "'", with: "'\\''"))'"
     }
 }

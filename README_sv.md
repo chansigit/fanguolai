@@ -37,7 +37,8 @@ macOS har ett enda globalt reglage för "Naturlig scrollning". Slår du på det 
 ```bash
 # Ladda ned från GitHub Releases, eller bygg från källkod:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Kör det

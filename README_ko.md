@@ -37,7 +37,8 @@ macOS에는 「자연스러운 스크롤」 토글이 하나뿐입니다. 켜면
 ```bash
 # GitHub Releases에서 다운로드하거나 소스에서 빌드:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # 실행

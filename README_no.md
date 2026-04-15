@@ -37,7 +37,8 @@ macOS har én global bryter for «Naturlig rulling». Slår du den på, føles s
 ```bash
 # Last ned fra GitHub Releases, eller bygg fra kildekode:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Kjør det

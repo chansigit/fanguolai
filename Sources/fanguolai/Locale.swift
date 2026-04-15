@@ -21,10 +21,31 @@ struct L10n {
     static var pressCtrlC: String {
         lang == .zh ? "  按 Ctrl+C 停止" : "  press Ctrl+C to stop"
     }
-    static var eventTapError: String {
+    static func eventTapPermissionRequired(_ path: String) -> String {
         lang == .zh
-            ? "错误: 无法创建 Event Tap。请在「系统设置 → 隐私与安全性 → 辅助功能」中授权此程序。"
-            : "Error: Failed to create Event Tap. Please grant accessibility permission in System Settings → Privacy & Security → Accessibility."
+            ? """
+            错误: 当前进程没有辅助功能权限，无法拦截滚动事件。
+            请在「系统设置 → 隐私与安全性 → 辅助功能」中授权：
+              \(path)
+            """
+            : """
+            Error: This process does not have Accessibility permission, so it cannot intercept scroll events.
+            Grant permission in System Settings → Privacy & Security → Accessibility for:
+              \(path)
+            """
+    }
+    static func eventTapError(_ path: String) -> String {
+        lang == .zh
+            ? """
+            错误: 无法创建 Event Tap。
+            请确认已在「系统设置 → 隐私与安全性 → 辅助功能」中授权：
+              \(path)
+            """
+            : """
+            Error: Failed to create Event Tap.
+            Confirm this executable is allowed in System Settings → Privacy & Security → Accessibility:
+              \(path)
+            """
     }
     static func configReloaded(_ v: String, _ h: String) -> String {
         lang == .zh ? "配置已重新加载: 垂直=\(v), 水平=\(h)" : "Config reloaded: vertical=\(v), horizontal=\(h)"
@@ -72,16 +93,38 @@ struct L10n {
         }
         return "  autostart: \(installed ? "installed" : "not installed")"
     }
+    static func appBundleLabel(_ installed: Bool, _ path: String) -> String {
+        if lang == .zh {
+            return "  App 包: \(installed ? path : "未安装（目标路径: \(path)）")"
+        }
+        return "  app bundle: \(installed ? path : "not installed (target: \(path))")"
+    }
 
     // MARK: - Install/Uninstall
     static var launchAgentInstalled: String {
         lang == .zh ? "已安装开机自启 LaunchAgent" : "LaunchAgent installed for autostart"
+    }
+    static func appBundleInstalled(_ path: String) -> String {
+        lang == .zh ? "  App 包: \(path)" : "  app bundle: \(path)"
     }
     static func installPlist(_ path: String) -> String {
         "  plist: \(path)"
     }
     static func installLog(_ path: String) -> String {
         lang == .zh ? "  日志: \(path)" : "  log: \(path)"
+    }
+    static func installAccessibilityHint(_ path: String) -> String {
+        lang == .zh
+            ? """
+              请在「系统设置 → 隐私与安全性 → 辅助功能」中添加并授权这个 App：
+                \(path)
+              注意：LaunchAgent 本身不会替你弹出辅助功能授权。
+              """
+            : """
+              Add this app to System Settings → Privacy & Security → Accessibility:
+                \(path)
+              Note: the LaunchAgent cannot prompt for Accessibility access on its own.
+              """
     }
     static func installFailed(_ output: String) -> String {
         lang == .zh ? "安装失败: \(output)" : "Install failed: \(output)"
@@ -155,7 +198,8 @@ struct L10n {
               uninstall          卸载开机自启（LaunchAgent）
               help               显示此帮助信息
 
-            首次使用需要在「系统设置 → 隐私与安全性 → 辅助功能」中授权。
+            install 会创建 ~/Applications/Fanguolai.app。
+            首次使用需要在「系统设置 → 隐私与安全性 → 辅助功能」中授权这个 App。
             """
         }
         return """
@@ -177,7 +221,8 @@ struct L10n {
           uninstall          Uninstall autostart (LaunchAgent)
           help               Show this help message
 
-        Accessibility permission is required on first run:
+        `install` creates ~/Applications/Fanguolai.app.
+        Grant Accessibility permission to that app in:
           System Settings → Privacy & Security → Accessibility
         """
     }

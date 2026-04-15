@@ -37,7 +37,8 @@ macOS には「ナチュラルスクロール」のトグルがひとつしか�
 ```bash
 # GitHub Releases からダウンロード、またはソースからビルド:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # 起動

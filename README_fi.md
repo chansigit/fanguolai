@@ -37,7 +37,8 @@ macOS:ssa on yksi yhteinen "Luonnollinen vieritys" -asetus. Kun se on päällä,
 ```bash
 # Lataa GitHub Releases -sivulta tai käännä lähdekoodista:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # Käynnistä

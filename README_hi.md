@@ -37,7 +37,8 @@ macOS में "नैचुरल स्क्रॉलिंग" का ए�
 ```bash
 # GitHub Releases से डाउनलोड करें, या सोर्स से बिल्ड करें:
 git clone https://github.com/chansigit/fanguolai.git
-cd fanguolai && make build
+cd fanguolai
+make build
 sudo make install
 
 # चलाएं
